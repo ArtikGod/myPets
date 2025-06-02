@@ -60,7 +60,7 @@ export class AppealService {
   }
 
   async getAppeals(startDate?: Date, endDate?: Date): Promise<Appeal[]> {
-    const query = this.appealRepository.createQueryBuilder('appeal');
+    const query = this.appealRepository.createQueryBuilder('appeal').take(1000);
     
     if (startDate && endDate) {
       query.where('appeal.createdAt BETWEEN :start AND :end', { 
