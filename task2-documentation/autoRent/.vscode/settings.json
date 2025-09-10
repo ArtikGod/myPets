@@ -1,0 +1,14 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.suggest.autoImports": true,
+  "typescript.preferences.useAliasesForRenames": false,
+  "files.associations": {
+    "*.test.ts": "typescript"
+  },
+  "typescript.preferences.includeCompletionsForModuleExports": true,
+  "jest.jestCommandLine": "npm test --",
+  "jest.autoRun": "off",
+  "typescript.validate.enable": true,
+  "typescript.format.enable": true,
+  "typescript.suggest.completeFunctionCalls": true
+}
