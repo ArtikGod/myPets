@@ -3,17 +3,13 @@
 ## 📋 Обзор Задания
 
 **Проект**: Test Task Vibe Coding Efficiency
-**Цель**: Демонстрация эффективности использования Claude Sonnet 4 в VSCode для решения комплексных задач разработки
+**Цель**: Демонстрация эффективности использования AI для решения комплексных задач разработки
 **Инструмент**: Claude Sonnet 4 через VSCode расширение
 **Результат**: 100% выполнение всех задач без ручных доработок
 
 ---
 
 ## 🎯 Задачи и Исторический Контекст
-
-### Контекст Происхождения
-
-Задание выполнено в рамках тестового проекта на тему эффективности использования AI в разработке. Пользователь работал над комплексным заданием и решил задокументировать весь процесс взаимодействия с Claude Sonnet 4.
 
 ### Основные Задачи
 
@@ -23,27 +19,6 @@
 
 ---
 
-## 📝 Поддержка Диалоговой Сессии
-
-### Переключение Режимов
-
-Система поддерживает несколько режимов взаимодействия для различных типов задач:
-
--   **Code Mode** - для создания/редактирования кода и файлов
--   **Debug Mode** - для отладки и анализа ошибок
--   **Ask Mode** - для коммуникации и ответа на вопросы
--   **Architect Mode** - для планирования и проектирования
--   **Orchestrator Mode** - для комплексных мульти-задач
-
-### Адаптивная Передача Контекста
-
-Система автоматически сохраняет контекст предыдущих сообщений, что позволяет:
-
--   Продолжать обсуждение без потери информации
--   Ссылаться на предыдущие решения
--   Поддерживать консистентность кода и подходов
-
----
 
 ## 🔍 Детальный Анализ Задач
 
@@ -235,12 +210,15 @@ export default {
 
 **Промпт 4: Проверка качества**
 
+```
 Fix any issues in the following code from
 
 1. Address all detected problems (if any)
 2. Identify any other potential bugs or issues
 3. Provide corrected code
 4. Explain what was fixed and why
+
+```
 
 ### Задача 2: Документация Проекта
 
@@ -335,6 +313,8 @@ Fix any issues in the following code from
 #### 🎯 Комплексная Стратегия Многоязычности
 
 **Базовый Шаблон**:
+
+```
 Create a RESTful web application in [LANGUAGE] for managing notes, using SQLite as the database. The application should have an HTTP server with four endpoints: GET /notes to list all notes, POST /notes to create a note, PUT /notes/{id} to update a note, and DELETE /notes/{id} to delete a note. Implement basic input validation for the note's text field (non-empty, 1–500 characters). Use a modular package structure with the following components:
 main: Entry point to initialize the server, database, and router.
 handler: HTTP handlers for the endpoints, handling JSON parsing and validation.
@@ -343,6 +323,7 @@ repository: Database operations for the notes table (id INTEGER PRIMARY KEY, tex
 model: Structs for the Note entity (ID, Text, CreatedAt).
 db: SQLite connection setup and table creation.
 Use package or a lightweight router . Include error handling for invalid inputs (return HTTP 400) and database errors. Provide a basic setup for SQLite. Ensure the code is clean, modular, and follows [LANGUAGE] best practices. Start with the main package and incrementally build the application, explaining each step.
+```
 
 ## 📊 Метрики Эффективности AI
 
@@ -407,8 +388,6 @@ Use package or a lightweight router . Include error handling for invalid inputs 
 
 ### Обработка Ошибок и Итераций
 
-#### Сценарий Реального Применения
-
 **Промпт** → **Генерация** → **Результат**
 
 1. Первый промпт дал 90% корректного кода
@@ -438,14 +417,6 @@ Use package or a lightweight router . Include error handling for invalid inputs 
 -   **Включать примеры существующего кода** для стиля
 -   **Задавать конкретные требования** к структуре
 
-#### 4. Техническая Детализация
-
-```
-Type: ObjectId
-Dependencies: @jest/globals, ts-jest, supertest
-Patterns: AAA (Arrange, Act, Assert)
-Coverage: unit (80%), integration (90%), e2e (100%)
-```
 
 ## 🎉 Заключения и Рекомендации
 
@@ -468,26 +439,7 @@ Coverage: unit (80%), integration (90%), e2e (100%)
     - От unit тестов до production-ready кода
     - Покрытие всех аспектов проекта
 
-### 📈 Эффективность Работы
 
-#### Оптимальная Стратегия Использования
-
-1. **Разделение Работы**
-
-    ```
-    Большую задачу → Разделить на специализированные промпты
-    ```
-
-2. **Итеративный Подход**
-
-    ```
-    Генерация → Проверка → Уточнение → Финализация
-    ```
-
-3. **Консистентность**
-    ```
-    Определить стиль → Следовать паттерну → Поддерживать стандарты
-    ```
 
 ### 🏆 Результат
 
