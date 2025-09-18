@@ -1,0 +1,174 @@
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { BalanceService } from './balance.service';
+import { DebitBalanceDto } from './dto/debit-balance.dto';
+import { APP_CONSTANTS } from '../common/constants/app.constants';
+
+@ApiTags(APP_CONSTANTS.SWAGGER.TAG)
+@Controller(APP_CONSTANTS.ROUTES.BALANCE)
+export class BalanceController {
+  constructor(private readonly balanceService: BalanceService) {}
+
+  @Post(APP_CONSTANTS.ROUTES.DEBIT)
+  @ApiOperation({
+    summary: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.DEBIT_BALANCE,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.DEBIT_BALANCE_DESC,
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.OK,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.BALANCE_DEBITED,
+    schema: {
+      example: {
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.SUCCESS]:
+          APP_CONSTANTS.DEFAULTS.SUCCESS_TRUE,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.USER_ID]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.USER_ID,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.PREVIOUS_BALANCE]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.PREVIOUS_BALANCE,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.NEW_BALANCE]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.NEW_BALANCE,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.DEBITED_AMOUNT]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.AMOUNT,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.TRANSACTION_ID]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.TRANSACTION_ID,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.TIMESTAMP]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.TIMESTAMP,
+      },
+    },
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.BAD_REQUEST,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.BAD_REQUEST,
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.NOT_FOUND,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.NOT_FOUND,
+  })
+  async debitBalance(@Body() debitBalanceDto: DebitBalanceDto) {
+    return await this.balanceService.debitBalance(debitBalanceDto);
+  }
+
+  @Get(APP_CONSTANTS.ROUTES.USER_BY_ID)
+  @ApiOperation({
+    summary: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.GET_BALANCE,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.GET_BALANCE_DESC,
+  })
+  @ApiParam({
+    name: APP_CONSTANTS.PARAMS.USER_ID,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.USER_ID,
+    example: APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.USER_ID,
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.OK,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.USER_BALANCE,
+    schema: {
+      example: {
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.USER_ID]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.USER_ID,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.BALANCE]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.BALANCE_EXAMPLE,
+      },
+    },
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.NOT_FOUND,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.NOT_FOUND,
+  })
+  async getUserBalance(
+    @Param(APP_CONSTANTS.PARAMS.USER_ID, ParseIntPipe) userId: number,
+  ) {
+    return await this.balanceService.getUserBalance(userId);
+  }
+
+  @Get(APP_CONSTANTS.ROUTES.HISTORY_BY_ID)
+  @ApiOperation({
+    summary: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.GET_HISTORY,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.GET_HISTORY_DESC,
+  })
+  @ApiParam({
+    name: APP_CONSTANTS.PARAMS.USER_ID,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.USER_ID,
+    example: APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.USER_ID,
+  })
+  @ApiQuery({
+    name: APP_CONSTANTS.PARAMS.LIMIT,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.LIMIT_PARAM,
+    example: APP_CONSTANTS.DEFAULT_HISTORY_LIMIT,
+    required: false,
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.OK,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.PAYMENT_HISTORY,
+    schema: {
+      example: [
+        {
+          [APP_CONSTANTS.SCHEMA_PROPERTIES.ID]:
+            APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.TRANSACTION_ID,
+          [APP_CONSTANTS.SCHEMA_PROPERTIES.USER_ID]:
+            APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.USER_ID,
+          [APP_CONSTANTS.SCHEMA_PROPERTIES.ACTION]:
+            APP_CONSTANTS.PAYMENT_ACTIONS.DEBIT,
+          [APP_CONSTANTS.SCHEMA_PROPERTIES.AMOUNT]:
+            APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.AMOUNT,
+          [APP_CONSTANTS.SCHEMA_PROPERTIES.DESCRIPTION]:
+            APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.DESCRIPTION,
+          [APP_CONSTANTS.SCHEMA_PROPERTIES.TS]:
+            APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.TIMESTAMP,
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.NOT_FOUND,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.NOT_FOUND,
+  })
+  async getPaymentHistory(
+    @Param(APP_CONSTANTS.PARAMS.USER_ID, ParseIntPipe) userId: number,
+    @Query(APP_CONSTANTS.PARAMS.LIMIT, new ParseIntPipe({ optional: true }))
+    limit?: number,
+  ) {
+    return await this.balanceService.getPaymentHistory(userId, limit);
+  }
+
+  @Post(APP_CONSTANTS.ROUTES.USER)
+  @ApiOperation({
+    summary: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.CREATE_USER,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.OPERATIONS.CREATE_USER_DESC,
+  })
+  @ApiResponse({
+    status: APP_CONSTANTS.HTTP.STATUS_CODES.CREATED,
+    description: APP_CONSTANTS.API_DESCRIPTIONS.RESPONSES.USER_CREATED,
+    schema: {
+      example: {
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.ID]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.USER_ID,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.BALANCE]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.INITIAL_BALANCE,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.CREATED_AT]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.TIMESTAMP,
+        [APP_CONSTANTS.SCHEMA_PROPERTIES.UPDATED_AT]:
+          APP_CONSTANTS.API_DESCRIPTIONS.EXAMPLES.TIMESTAMP,
+      },
+    },
+  })
+  async createUser(
+    @Body(APP_CONSTANTS.PARAMS.INITIAL_BALANCE)
+    initialBalance: number = APP_CONSTANTS.DEFAULTS.INITIAL_BALANCE,
+  ) {
+    return await this.balanceService.createUser(initialBalance);
+  }
+}
