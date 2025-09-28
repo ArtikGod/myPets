@@ -24,12 +24,50 @@ Frontend (Vue.js)
 
 🚀 Запуск приложения
 
+## Обычный запуск
+
 Backend (порт 3001):
 
+```bash
 npm install
 npm start
+```
 
 Frontend (порт 8080):
 
+```bash
+cd frontend
 npm install
 npm run dev
+```
+
+## Docker запуск
+
+Запуск всего приложения с помощью Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+После запуска:
+
+-   Backend API будет доступен на http://localhost:3001
+-   Frontend будет доступен на http://localhost:8080
+
+Остановка:
+
+```bash
+docker-compose down
+```
+
+Запуск в фоновом режиме:
+
+```bash
+docker-compose up -d --build
+```
+
+Просмотр логов:
+
+```bash
+docker-compose logs -f
+```

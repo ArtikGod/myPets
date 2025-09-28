@@ -29,7 +29,10 @@ class App {
             cors({
                 origin: process.env.CORS_ORIGIN
                     ? process.env.CORS_ORIGIN.split(",")
-                    : APP_CONSTANTS.SERVER_CONFIG.CORS_ORIGINS,
+                    : [
+                          "http://localhost:8080",
+                          "http://127.0.0.1:8080",
+                      ],
                 credentials: true,
             })
         );
@@ -38,8 +41,6 @@ class App {
             express.json({ limit: APP_CONSTANTS.SERVER_CONFIG.BODY_LIMIT })
         );
         this.app.use(express.urlencoded({ extended: true }));
-
-        this.app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
         this.app.use(loggerMiddleware);
     }
@@ -54,14 +55,17 @@ class App {
         );
         this.app.get("/api/logs/recent", getRecentLogs);
 
-        this.app.get(APP_CONSTANTS.API_ENDPOINTS.HEALTH, (req, res) => {
-            res.status(APP_CONSTANTS.HTTP_STATUS.OK).json({
-                success: true,
-                message: APP_CONSTANTS.SUCCESS_MESSAGES.HEALTH_CHECK,
-                timestamp: new Date().toISOString(),
-                version: APP_CONSTANTS.SERVER_CONFIG.API_VERSION,
-            });
-        });
+        this.app.get(
+            `/api${APP_CONSTANTS.API_ENDPOINTS.HEALTH}`,
+            (req, res) => {
+                res.status(APP_CONSTANTS.HTTP_STATUS.OK).json({
+                    success: true,
+                    message: APP_CONSTANTS.SUCCESS_MESSAGES.HEALTH_CHECK,
+                    timestamp: new Date().toISOString(),
+                    version: APP_CONSTANTS.SERVER_CONFIG.API_VERSION,
+                });
+            }
+        );
 
         this.app.get("/api", (req, res) => {
             res.status(APP_CONSTANTS.HTTP_STATUS.OK).json({
@@ -93,21 +97,9 @@ class App {
                 },
             });
         });
-
-        this.app.get("*", (req, res) => {
-            if (!req.path.startsWith("/api")) {
-                res.sendFile(
-                    path.join(__dirname, "../frontend/dist/index.html")
-                );
-            } else {
-                notFoundHandler(req, res);
-            }
-        });
     }
 
     setupErrorHandling() {
-        this.app.use("/api/*", notFoundHandler);
-
         this.app.use(errorHandler);
     }
 
