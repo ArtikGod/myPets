@@ -1,0 +1,14 @@
+{
+  "name": "logiclike-voting",
+  "version": "1.0.0",
+  "description": "Система голосования за идеи развития продукта LogicLike",
+  "scripts": {
+    "dev": "docker-compose up --build",
+    "start": "docker-compose up",
+    "stop": "docker-compose down",
+    "clean": "docker-compose down -v"
+  },
+  "keywords": ["voting", "ideas", "logiclike", "edtech"],
+  "author": "LogicLike Team",
+  "license": "MIT"
+}
