@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  telegramId  String?  @unique
+  name        String
+  email       String   @unique
+  password    String?
+  role        Role     @default(USER)
+  locale      String   @default("ru")
+  timezone    String   @default("Europe/Moscow")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       Task[]
+  customTasks CustomTask[]
+  progress    UserProgress[]
+
+  @@map("users")
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  title       String
+  titleEn     String?
+  description String
+  descriptionEn String?
+  category    String
+  categoryEn  String?
+  order       Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       Task[]
+
+  @@map("exercises")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  userId      String
+  exerciseId  String
+  text        String
+  textEn      String?
+  date        DateTime
+  status      TaskStatus @default(PENDING)
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise    Exercise   @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
+}
+
+model CustomTask {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  titleEn     String?
+  description String
+  descriptionEn String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("custom_tasks")
+}
+
+model UserProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime
+  tasksReceived   Int      @default(0)
+  tasksCompleted  Int      @default(0)
+  streak          Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("user_progress")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
