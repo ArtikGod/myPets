@@ -12,12 +12,10 @@ export class WildberriesService {
   }
 
   async fetchTariffs(): Promise<Tariff[]> {
-    const currentDate = new Date().toISOString().split(FORMAT.DATE.ISO_DATE_ONLY)[NUMBERS.FIRST_INDEX];
+    const currentDate = this.getCurrentDate();
     const urlWithDate = `${this.apiUrl}?${API.WILDBERRIES.PARAMS.DATE_PARAM}=${currentDate}`;
     
     try {
-      const startTime = Date.now();
-      
       const response = await axios.get<WildberriesRealTariffResponse>(urlWithDate, {
         headers: {
           [HTTP.HEADERS.AUTHORIZATION]: this.apiToken ? `${API.WILDBERRIES.HEADERS.AUTHORIZATION} ${this.apiToken}` : undefined,
@@ -25,10 +23,8 @@ export class WildberriesService {
         }
       });
 
-      const endTime = Date.now();
       if (response.data && response.data.response && response.data.response.data) {
-        const transformedData = this.transformApiResponse(response.data);
-        return transformedData;
+        return this.transformApiResponse(response.data, currentDate);
       } else {
         return [];
       }
@@ -65,9 +61,11 @@ export class WildberriesService {
     }
   }
 
-  private transformApiResponse(data: WildberriesRealTariffResponse): Tariff[] {
-    const currentDate = new Date().toISOString().split(FORMAT.DATE.ISO_DATE_ONLY)[NUMBERS.FIRST_INDEX];
+  private getCurrentDate(): string {
+    return new Date().toISOString().split(FORMAT.DATE.ISO_DATE_ONLY)[NUMBERS.FIRST_INDEX];
+  }
 
+  private transformApiResponse(data: WildberriesRealTariffResponse, currentDate: string): Tariff[] {
     if (!data.response?.data?.warehouseList) {
       return [];
     }
@@ -80,11 +78,6 @@ export class WildberriesService {
     );
 
     return activeWarehouses.map(warehouse => {
-      const deliveryBase = this.parseDecimal(warehouse.boxDeliveryBase);
-      const deliveryLiter = this.parseDecimal(warehouse.boxDeliveryLiter);
-      const storageBase = this.parseDecimal(warehouse.boxStorageBase);
-      const storageLiter = this.parseDecimal(warehouse.boxStorageLiter);
-
       const tariff: Tariff = {
         date: currentDate,
         warehouse_name: warehouse.warehouseName,
@@ -118,7 +111,7 @@ export class WildberriesService {
   }
 
   async fetchRawResponse(): Promise<any> {
-    const currentDate = new Date().toISOString().split(FORMAT.DATE.ISO_DATE_ONLY)[NUMBERS.FIRST_INDEX];
+    const currentDate = this.getCurrentDate();
     const urlWithDate = `${this.apiUrl}?${API.WILDBERRIES.PARAMS.DATE_PARAM}=${currentDate}`;
     
     try {

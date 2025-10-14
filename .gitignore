@@ -1,3 +1,6 @@
+.gitignore
+tz.txt
+coverage/
 # Environment files
 .env
 .env.docker
