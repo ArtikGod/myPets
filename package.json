@@ -1,0 +1,27 @@
+{
+  "name": "moyklass",
+  "version": "1.0.0",
+  "description": "Lessons API",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "migrate": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback",
+    "seed": "knex seed:run"
+  },
+  "keywords": ["express", "knex", "postgres", "api", "lessons"],
+  "author": "ArtikGo",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "16.4.5",
+    "express": "^5.1.0",
+    "knex": "^3.1.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
