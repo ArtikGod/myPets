@@ -29,17 +29,21 @@ async function get(path) {
 
 const tests = [
     "/lessons",
+    "/lessons?page=2",
+    "/lessons?lessonsPerPage=100",
+    "/lessons?page=999",
     "/lessons?date=2019-09-01",
     "/lessons?date=2019-09-01,2019-09-04",
-    "/lessons?status=1",
-    "/lessons?teacherIds=1,3",
-    "/lessons?studentsCount=2,4",
-    "/lessons?pageSize=3",
-    "/lessons?pageSize=3&lastDate=2019-09-01&lastId=1",
-    "/lessons?pageSize=200",
-    "/lessons?status=1&date=2019-09-01,2019-09-04&pageSize=5",
     "/lessons?date=invalid",
+    "/lessons?status=1",
     "/lessons?status=999",
+    "/lessons?teacherIds=1",
+    "/lessons?teacherIds=1,3",
+    "/lessons?teacherIds&lessonsPerPage=10",
+    "/lessons?studentsCount=0",
+    "/lessons?studentsCount=1",
+    "/lessons?studentsCount=2",
+    "/lessons?studentsCount=0,2&lessonsPerPage=10",
     "/lessons?teacherIds=" +
         Array(60)
             .fill()

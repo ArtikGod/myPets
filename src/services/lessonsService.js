@@ -19,8 +19,7 @@ class LessonsService {
                 minCount,
                 maxCount,
                 pageSize = APP_CONSTANTS.PAGINATION.DEFAULT_PAGE_SIZE,
-                lastDate,
-                lastId,
+                page = APP_CONSTANTS.PAGINATION.DEFAULT_PAGE,
             } = filters;
 
             const lessons = await this.getLessonsBasic({
@@ -31,20 +30,11 @@ class LessonsService {
                 minCount,
                 maxCount,
                 pageSize,
-                lastDate,
-                lastId,
+                page,
             });
 
             if (lessons.length === 0) {
-                const emptyResponse = {
-                    data: [],
-                    pagination: {
-                        pageSize,
-                        hasMore: false,
-                        nextCursor: null,
-                        count: 0,
-                    },
-                };
+                const emptyResponse = [];
                 cacheService.set(
                     cacheKey,
                     emptyResponse,
@@ -69,15 +59,10 @@ class LessonsService {
                 visitCounts
             );
 
-            const response = {
-                data: result,
-                pagination: this.buildPaginationResponse(result, pageSize),
-            };
-
-            cacheService.set(cacheKey, response);
-            return response;
+            cacheService.set(cacheKey, result);
+            return result;
         } catch (error) {
-            console.error("Error in getLessons:", error);
+            console.error(APP_CONSTANTS.LOG_MESSAGES.GET_LESSONS_ERROR, error);
             throw error;
         }
     }
@@ -172,8 +157,10 @@ class LessonsService {
             }
         }
 
-        if (queryParams.pageSize) {
-            const size = parseInt(queryParams.pageSize);
+        if (queryParams.lessonsPerPage || queryParams.pageSize) {
+            const size = parseInt(
+                queryParams.lessonsPerPage || queryParams.pageSize
+            );
             if (isNaN(size) || size <= 0) {
                 throw new Error(APP_CONSTANTS.ERROR_MESSAGES.INVALID_PAGE_SIZE);
             }
@@ -187,13 +174,12 @@ class LessonsService {
             filters.pageSize = size;
         }
 
-        if (queryParams.lastDate && queryParams.lastId) {
-            filters.lastDate = queryParams.lastDate;
-            const lastId = parseInt(queryParams.lastId);
-            if (isNaN(lastId)) {
-                throw new Error(APP_CONSTANTS.ERROR_MESSAGES.INVALID_LAST_ID);
+        if (queryParams.page) {
+            const pageNum = parseInt(queryParams.page);
+            if (isNaN(pageNum) || pageNum < 1) {
+                throw new Error(APP_CONSTANTS.ERROR_MESSAGES.INVALID_PAGE);
             }
-            filters.lastId = lastId;
+            filters.page = pageNum;
         }
 
         return filters;
@@ -208,8 +194,7 @@ class LessonsService {
             minCount,
             maxCount,
             pageSize,
-            lastDate,
-            lastId,
+            page,
         } = filters;
 
         let query = db("lessons as l").select(
@@ -262,14 +247,8 @@ class LessonsService {
 
         query = query.orderByRaw("l.date ASC, l.id ASC");
 
-        if (lastDate && lastId) {
-            query = query.whereRaw("(l.date, l.id) > (?, ?)", [
-                lastDate,
-                lastId,
-            ]);
-        }
-
-        query = query.limit(pageSize);
+        const offset = (page - 1) * pageSize;
+        query = query.limit(pageSize).offset(offset);
 
         return await query;
     }
@@ -354,29 +333,6 @@ class LessonsService {
             students: studentsData[lesson.id] || [],
             teachers: teachersData[lesson.id] || [],
         }));
-    }
-
-    buildPaginationResponse(lessons, requestedPageSize) {
-        const pageSize =
-            parseInt(requestedPageSize) ||
-            APP_CONSTANTS.PAGINATION.DEFAULT_PAGE_SIZE;
-        const hasMore = lessons.length === pageSize;
-
-        let nextCursor = null;
-        if (hasMore && lessons.length > 0) {
-            const lastLesson = lessons[lessons.length - 1];
-            nextCursor = {
-                lastDate: lastLesson.date,
-                lastId: lastLesson.id,
-            };
-        }
-
-        return {
-            pageSize,
-            hasMore,
-            nextCursor,
-            count: lessons.length,
-        };
     }
 
     generateCacheKey(filters) {
