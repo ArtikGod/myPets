@@ -226,23 +226,49 @@ class LessonsService {
         }
 
         if (minCount !== undefined || maxCount !== undefined) {
-            query = query.whereExists(function () {
-                this.select(1)
-                    .from("lesson_students as ls")
-                    .whereRaw("ls.lesson_id = l.id")
-                    .groupBy("ls.lesson_id");
+            if (minCount === 0) {
+                query = query.where(function () {
+                    this.whereExists(function () {
+                        this.select(1)
+                            .from("lesson_students as ls")
+                            .whereRaw("ls.lesson_id = l.id")
+                            .groupBy("ls.lesson_id");
 
-                if (minCount !== undefined && maxCount !== undefined) {
-                    this.havingRaw("COUNT(*) BETWEEN ? AND ?", [
-                        minCount,
-                        maxCount,
-                    ]);
-                } else if (minCount !== undefined) {
-                    this.havingRaw("COUNT(*) >= ?", [minCount]);
-                } else {
-                    this.havingRaw("COUNT(*) <= ?", [maxCount]);
-                }
-            });
+                        if (minCount !== undefined && maxCount !== undefined) {
+                            this.havingRaw("COUNT(*) BETWEEN ? AND ?", [
+                                minCount,
+                                maxCount,
+                            ]);
+                        } else if (minCount !== undefined) {
+                            this.havingRaw("COUNT(*) >= ?", [minCount]);
+                        } else {
+                            this.havingRaw("COUNT(*) <= ?", [maxCount]);
+                        }
+                    }).orWhereNotExists(function () {
+                        this.select(1)
+                            .from("lesson_students as ls")
+                            .whereRaw("ls.lesson_id = l.id");
+                    });
+                });
+            } else {
+                query = query.whereExists(function () {
+                    this.select(1)
+                        .from("lesson_students as ls")
+                        .whereRaw("ls.lesson_id = l.id")
+                        .groupBy("ls.lesson_id");
+
+                    if (minCount !== undefined && maxCount !== undefined) {
+                        this.havingRaw("COUNT(*) BETWEEN ? AND ?", [
+                            minCount,
+                            maxCount,
+                        ]);
+                    } else if (minCount !== undefined) {
+                        this.havingRaw("COUNT(*) >= ?", [minCount]);
+                    } else {
+                        this.havingRaw("COUNT(*) <= ?", [maxCount]);
+                    }
+                });
+            }
         }
 
         query = query.orderByRaw("l.date ASC, l.id ASC");
