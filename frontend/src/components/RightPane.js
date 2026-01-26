@@ -32,7 +32,13 @@ const RightPane = ({ updateTrigger, onSelectionChange }) => {
     }, [filter]);
 
     const deselectItem = async (id) => {
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems(prev => {
+            const newItems = prev.filter(i => i.id !== id);
+            if (newItems.length < 20 && hasMore) {
+                loadMore();
+            }
+            return newItems;
+        });
         try {
             await axios.post(`${API_BASE_URL}/deselect`, { id });
             onSelectionChange();
