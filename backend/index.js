@@ -1,25 +1,72 @@
 const express = require("express");
 const cors = require("cors");
-const path = require('path'); // Added path module
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
-const port = process.env.PORT || 3000; // Use process.env.PORT
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cors());
 
 // =======================
-// DATA
+// CONSTANTS
 // =======================
 
+const STATE_PATH = path.join(__dirname, "state.json");
+
+// =======================
+// DATA (REQUIRED BY TZ)
+// =======================
+
+// 1 000 000 элементов — по ТЗ
 const allItemsMap = new Map(
-    Array.from({ length: 1_000_000 }, (_, i) => [i + 1, { id: i + 1 }])
+    Array.from({ length: 1_000_000 }, (_, i) => [i + 1, { id: i + 1 }]),
 );
-const selectedItemsSet = new Set();
+
+// =======================
+// PERSISTED STATE
+// =======================
+
+let selectedItemsSet = new Set();
 let selectedOrder = [];
 let nextId = 1_000_001;
 
-// queues
+// ---------- LOAD STATE ----------
+if (fs.existsSync(STATE_PATH)) {
+    try {
+        const saved = JSON.parse(fs.readFileSync(STATE_PATH, "utf-8"));
+
+        selectedOrder = Array.isArray(saved.selectedOrder)
+            ? saved.selectedOrder
+            : [];
+
+        selectedItemsSet = new Set(selectedOrder);
+        nextId = typeof saved.nextId === "number" ? saved.nextId : nextId;
+    } catch (e) {
+        console.error("Failed to load state.json", e);
+    }
+}
+
+// ---------- SAVE STATE ----------
+function persistState() {
+    fs.writeFileSync(
+        STATE_PATH,
+        JSON.stringify(
+            {
+                selectedOrder,
+                nextId,
+            },
+            null,
+            2,
+        ),
+    );
+}
+
+// =======================
+// QUEUES (KEPT, BUT SAFE)
+// =======================
+
 let addQueue = new Set();
 let selectQueue = new Set();
 let deselectQueue = new Set();
@@ -29,38 +76,42 @@ let deselectQueue = new Set();
 // =======================
 
 setInterval(() => {
-    if (addQueue.size > 0) {
-        const ids = Array.from(addQueue);
-        ids.forEach((id) => {
-            if (!allItemsMap.has(id)) {
-                allItemsMap.set(id, { id });
-                nextId = Math.max(nextId, id + 1);
-            }
-        });
-        addQueue.clear();
+    if (addQueue.size === 0) return;
+
+    for (const id of addQueue) {
+        if (!allItemsMap.has(id)) {
+            allItemsMap.set(id, { id });
+            nextId = Math.max(nextId, id + 1);
+        }
     }
+
+    addQueue.clear();
+    persistState();
 }, 10_000);
 
 setInterval(() => {
-    if (selectQueue.size > 0) {
-        for (const id of selectQueue) {
-            if (!selectedItemsSet.has(id)) {
-                selectedItemsSet.add(id);
-                if (!selectedOrder.includes(id)) {
-                    selectedOrder.push(id);
-                }
-            }
+    let changed = false;
+
+    for (const id of selectQueue) {
+        if (!selectedItemsSet.has(id)) {
+            selectedItemsSet.add(id);
+            selectedOrder.push(id);
+            changed = true;
         }
-        selectQueue.clear();
     }
 
-    if (deselectQueue.size > 0) {
-        for (const id of deselectQueue) {
+    for (const id of deselectQueue) {
+        if (selectedItemsSet.has(id)) {
             selectedItemsSet.delete(id);
             selectedOrder = selectedOrder.filter((x) => x !== id);
+            changed = true;
         }
-        deselectQueue.clear();
     }
+
+    selectQueue.clear();
+    deselectQueue.clear();
+
+    if (changed) persistState();
 }, 1_000);
 
 // =======================
@@ -71,44 +122,40 @@ setInterval(() => {
 app.get("/api/left-items", (req, res) => {
     const { filter = "", limit = 20, offset = 0 } = req.query;
 
-    let items = Array.from(allItemsMap.values()).filter(
-        (item) => !selectedItemsSet.has(item.id)
-    );
+    let items = [];
 
-    if (filter) {
-        items = items.filter((item) => item.id.toString().startsWith(filter));
+    for (const item of allItemsMap.values()) {
+        if (!selectedItemsSet.has(item.id)) {
+            if (!filter || item.id.toString().startsWith(filter)) {
+                items.push(item);
+            }
+        }
     }
 
-    const paginated = items.slice(
-        Number(offset),
-        Number(offset) + Number(limit)
-    );
+    const start = Number(offset);
+    const end = start + Number(limit);
 
     res.json({
-        items: paginated,
+        items: items.slice(start, end),
         total: items.length,
     });
 });
 
-// SELECTED ITEMS (ВАЖНО: ТОЛЬКО selectedOrder!)
+// SELECTED ITEMS (ORDER IS IMPORTANT)
 app.get("/api/selected-items", (req, res) => {
     const { filter = "", limit = 20, offset = 0 } = req.query;
 
-    let items = selectedOrder
-        .map((id) => allItemsMap.get(id))
-        .filter(Boolean);
+    let items = selectedOrder.map((id) => allItemsMap.get(id)).filter(Boolean);
 
     if (filter) {
         items = items.filter((item) => item.id.toString().startsWith(filter));
     }
 
-    const paginated = items.slice(
-        Number(offset),
-        Number(offset) + Number(limit)
-    );
+    const start = Number(offset);
+    const end = start + Number(limit);
 
     res.json({
-        items: paginated,
+        items: items.slice(start, end),
         total: items.length,
     });
 });
@@ -153,11 +200,7 @@ app.post("/api/deselect", (req, res) => {
     res.json({ success: true });
 });
 
-// =======================
-// ⭐️ CORE FIX ⭐️
-// MOVE ITEM (drag & drop)
-// =======================
-
+// MOVE ITEM (DRAG & DROP)
 app.post("/api/move-item", (req, res) => {
     const { movedId, beforeId } = req.body;
 
@@ -170,53 +213,44 @@ app.post("/api/move-item", (req, res) => {
         return res.status(404).json({ error: "Item not found" });
     }
 
-    // remove
     selectedOrder.splice(fromIndex, 1);
 
-    let toIndex;
+    let toIndex =
+        beforeId === null
+            ? selectedOrder.length
+            : selectedOrder.indexOf(beforeId);
 
-    if (beforeId === null) {
-        // move to end
-        toIndex = selectedOrder.length;
-    } else {
-        toIndex = selectedOrder.indexOf(beforeId);
-        if (toIndex === -1) {
-            toIndex = selectedOrder.length;
-        }
-    }
+    if (toIndex === -1) toIndex = selectedOrder.length;
 
     selectedOrder.splice(toIndex, 0, movedId);
 
-    // sync selectedItemsSet
-    // No need to sync, selectedItemsSet only cares about existence, not order.
+    persistState();
 
     res.json({ success: true });
 });
 
-// ❌ DEPRECATED
-app.post("/api/update-order", (_, res) => {
-    res.status(410).json({
-        error: "update-order is deprecated. Use /move-item",
-    });
-});
-
-// STATE (debug)
+// STATE (DEBUG)
 app.get("/api/state", (_, res) => {
     res.json({
-        selectedOrder,
         selectedCount: selectedOrder.length,
         nextId,
     });
 });
 
-// Serve static files from the React frontend build folder
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+// =======================
+// FRONTEND
+// =======================
 
-// All other GET requests not handled before will return our React app
-app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
 });
 
+// =======================
+// START
+// =======================
+
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running on port ${port}`);
 });
