@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+const path = require('path'); // Added path module
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // Use process.env.PORT
 
 app.use(express.json());
 app.use(cors());
@@ -208,8 +209,12 @@ app.get("/api/state", (_, res) => {
     });
 });
 
-app.get("/", (_, res) => {
-    res.send("OK");
+// Serve static files from the React frontend build folder
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// All other GET requests not handled before will return our React app
+app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
 });
 
 app.listen(port, () => {
