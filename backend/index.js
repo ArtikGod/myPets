@@ -11,8 +11,10 @@ app.use(cors());
 // DATA
 // =======================
 
-let allItems = Array.from({ length: 1_000_000 }, (_, i) => ({ id: i + 1 }));
-let selectedItems = [];
+const allItemsMap = new Map(
+    Array.from({ length: 1_000_000 }, (_, i) => [i + 1, { id: i + 1 }])
+);
+const selectedItemsSet = new Set();
 let selectedOrder = [];
 let nextId = 1_000_001;
 
@@ -29,8 +31,8 @@ setInterval(() => {
     if (addQueue.size > 0) {
         const ids = Array.from(addQueue);
         ids.forEach((id) => {
-            if (!allItems.some((item) => item.id === id)) {
-                allItems.push({ id });
+            if (!allItemsMap.has(id)) {
+                allItemsMap.set(id, { id });
                 nextId = Math.max(nextId, id + 1);
             }
         });
@@ -41,8 +43,8 @@ setInterval(() => {
 setInterval(() => {
     if (selectQueue.size > 0) {
         for (const id of selectQueue) {
-            if (!selectedItems.includes(id)) {
-                selectedItems.push(id);
+            if (!selectedItemsSet.has(id)) {
+                selectedItemsSet.add(id);
                 if (!selectedOrder.includes(id)) {
                     selectedOrder.push(id);
                 }
@@ -53,7 +55,7 @@ setInterval(() => {
 
     if (deselectQueue.size > 0) {
         for (const id of deselectQueue) {
-            selectedItems = selectedItems.filter((x) => x !== id);
+            selectedItemsSet.delete(id);
             selectedOrder = selectedOrder.filter((x) => x !== id);
         }
         deselectQueue.clear();
@@ -68,7 +70,9 @@ setInterval(() => {
 app.get("/api/left-items", (req, res) => {
     const { filter = "", limit = 20, offset = 0 } = req.query;
 
-    let items = allItems.filter((item) => !selectedItems.includes(item.id));
+    let items = Array.from(allItemsMap.values()).filter(
+        (item) => !selectedItemsSet.has(item.id)
+    );
 
     if (filter) {
         items = items.filter((item) => item.id.toString().startsWith(filter));
@@ -90,7 +94,7 @@ app.get("/api/selected-items", (req, res) => {
     const { filter = "", limit = 20, offset = 0 } = req.query;
 
     let items = selectedOrder
-        .map((id) => allItems.find((x) => x.id === id))
+        .map((id) => allItemsMap.get(id))
         .filter(Boolean);
 
     if (filter) {
@@ -182,8 +186,8 @@ app.post("/api/move-item", (req, res) => {
 
     selectedOrder.splice(toIndex, 0, movedId);
 
-    // sync selectedItems
-    selectedItems = [...new Set(selectedOrder)];
+    // sync selectedItemsSet
+    // No need to sync, selectedItemsSet only cares about existence, not order.
 
     res.json({ success: true });
 });

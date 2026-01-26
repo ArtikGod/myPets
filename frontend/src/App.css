@@ -36,3 +36,30 @@
     transform: rotate(360deg);
   }
 }
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  margin: 4px;
+  background: lightblue;
+  border: 1px solid black;
+  cursor: pointer;
+}
+
+.list-item.is-dragging {
+  background: lightgreen;
+}
+
+.deselect-btn {
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  line-height: 20px;
+  text-align: center;
+}
