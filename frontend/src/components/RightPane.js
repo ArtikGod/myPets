@@ -41,7 +41,7 @@ const RightPane = ({ updateTrigger, onSelectionChange }) => {
         });
         try {
             await axios.post(`${API_BASE_URL}/deselect`, { id });
-            onSelectionChange();
+            setTimeout(() => onSelectionChange(), 1000); // Wait for backend processing
         } catch (error) {
             fetchData(0);
         }
@@ -63,6 +63,7 @@ const RightPane = ({ updateTrigger, onSelectionChange }) => {
                 movedId: moved.id,
                 beforeId: beforeItem ? beforeItem.id : null,
             });
+            setTimeout(() => onSelectionChange(), 1000); // Wait for backend processing
         } catch (error) {
             fetchData(0);
         }

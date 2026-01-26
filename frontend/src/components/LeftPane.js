@@ -41,7 +41,7 @@ const LeftPane = ({ updateTrigger, onSelectionChange }) => {
         });
         try {
             await axios.post(`${API_BASE_URL}/select`, { id });
-            onSelectionChange();
+            setTimeout(() => onSelectionChange(), 1000); // Wait for backend processing
         } catch (error) {
             fetchData(0);
         }
@@ -54,7 +54,7 @@ const LeftPane = ({ updateTrigger, onSelectionChange }) => {
                 id: parseInt(newId),
             });
             setNewId("");
-            setTimeout(() => fetchData(0), 1000);
+            setTimeout(() => fetchData(0), 10000); // Wait for backend processing (10 seconds)
         } catch (error) {
             console.error(error);
         }
