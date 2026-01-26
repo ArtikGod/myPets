@@ -54,7 +54,10 @@ const LeftPane = ({ updateTrigger, onSelectionChange }) => {
                 id: parseInt(newId),
             });
             setNewId("");
-            setTimeout(() => fetchData(0), 10000); // Wait for backend processing (10 seconds)
+            setTimeout(() => {
+                fetchData(0);
+                onSelectionChange(); // Trigger RightPane update
+            }, 10000); // Wait for backend processing (10 seconds)
         } catch (error) {
             console.error(error);
         }
